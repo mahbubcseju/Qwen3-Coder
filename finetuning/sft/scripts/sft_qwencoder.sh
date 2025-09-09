@@ -1,13 +1,13 @@
-export NCCL_IB_TC=136
-export NCCL_IB_SL=5
-export NCCL_IB_GID_INDEX=3
-export NCCL_SOCKET_IFNAME=bond0
-export NCCL_DEBUG=INFO
-export NCCL_IB_HCA=mlx5
-export NCCL_IB_TIMEOUT=22
-export NCCL_IB_QPS_PER_CONNECTION=8
-export NCCL_NET_PLUGIN=none
-export PATH=/path/to/miniconda3/envs/qwen/bin:$PATH;
+# export NCCL_IB_TC=136
+# export NCCL_IB_SL=5
+# export NCCL_IB_GID_INDEX=3
+# export NCCL_SOCKET_IFNAME=bond0
+# export NCCL_DEBUG=INFO
+# export NCCL_IB_HCA=mlx5
+# export NCCL_IB_TIMEOUT=22
+# export NCCL_IB_QPS_PER_CONNECTION=8
+# export NCCL_NET_PLUGIN=none
+# export PATH=/path/to/miniconda3/envs/qwen/bin:$PATH;
 
 DATA_PATH=${1}
 PRETRAINED_MODEL=${2}
@@ -34,6 +34,7 @@ DEEPSPEED_CONFIG="./configs/default_offload_opt_param.json"
 BATCH_SIZE=1024
 MICRO_BATCH_SIZE=4
 GRAD_ACCU=$(($BATCH_SIZE / $WORLD_SIZE / $MICRO_BATCH_SIZE))
+echo ${GRAD_ACCU}
 
 LR=5e-5
 MIN_LR=5e-6
@@ -46,7 +47,7 @@ echo "Pretrained Model" ${PRETRAINED_MODEL}
 echo "WORLD_SIZE" $WORLD_SIZE "MICRO BATCH SIZE" $MICRO_BATCH_SIZE "GRAD_ACCU" $GRAD_ACCU
 echo $DISTRIBUTED_ARGS
 
-cd ROOT_PATH="/path/to/sft/";
+# cd ROOT_PATH="/path/to/sft/";
 torchrun ${DISTRIBUTED_ARGS} train.py \
     --model_name_or_path  ${PRETRAINED_MODEL} \
     --data_path $DATA_PATH \
@@ -56,7 +57,7 @@ torchrun ${DISTRIBUTED_ARGS} train.py \
     --per_device_train_batch_size ${MICRO_BATCH_SIZE} \
     --gradient_accumulation_steps ${GRAD_ACCU} \
     --per_device_eval_batch_size 4 \
-    --evaluation_strategy "no" \
+    --eval_strategy "no" \
     --save_strategy "steps" \
     --save_steps 100 \
     --save_total_limit 100 \
@@ -66,8 +67,6 @@ torchrun ${DISTRIBUTED_ARGS} train.py \
     --lr_scheduler_type "cosine" \
     --logging_strategy "steps" \
     --logging_steps 1 \
-    --deepspeed ${DEEPSPEED_CONFIG} \
-    --report_to "tensorboard" \
     --bf16 True \
     --tf32 True \
     --truncate_source False
